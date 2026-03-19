@@ -5,7 +5,7 @@ from pydantic import BaseModel
 class SearchRequest(BaseModel):
     query: str
     limit: int = 3
-    # filter: Optional[Dict[str, Any]] = None
+    filter: Optional[Dict[str, Any]] = None  ## filtros sao opcionais
 
 
 class SearchResult(BaseModel):

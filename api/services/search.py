@@ -12,61 +12,25 @@ class SearchService:
         self.collection_name = collection_name
         self.embedding_service = EmbeddingService()
 
-    # def _build_qdrant_filter(self, filters: Optional[Dict[str, Any]]) -> Optional[Dict]:
-    #     if not filters:
-    #         return None
+    def _build_qdrant_filter(self, filters: Optional[Dict[str, Any]]) -> Optional[Dict]:
+        if not filters:
+            return None
 
-    #     must_conditions = []
-    #     for key, value in filters.items():
-    #         must_conditions.append(
-    #             {"key": f"metadata.{key}", "match": {"value": value}}
-    #         )
-    #     return {"must": must_conditions}
+        must_conditions = []
+        for key, value in filters.items():
+            must_conditions.append(
+                {"key": f"metadata.{key}", "match": {"value": value}}
+            )
+        return {"must": must_conditions}
 
-    # def search(
-    #     self, query: str, limit: int = 3, filter: Optional[Dict[str, Any]] = None
-    # ):
-    #     query_dense, query_sparse, query_colbert = self.embedding_service.embed_query(
-    #         query
-    #     )
-
-    #     query_filter = self._build_qdrant_filter(filter)
-
-    #     results = self.qdrant.query_points(
-    #         collection_name=self.collection_name,
-    #         prefetch=[
-    #             {
-    #                 "prefetch": [
-    #                     {"query": query_dense, "using": "dense", "limit": 20},
-    #                     {"query": query_sparse, "using": "sparse", "limit": 20},
-    #                 ],
-    #                 "query": models.FusionQuery(fusion=models.Fusion.RRF),
-    #                 "limit": 15,
-    #             }
-    #         ],
-    #         query=query_colbert,
-    #         using="colbert",
-    #         limit=limit,
-    #         query_filter=query_filter,
-    #     )
-
-    #     max_score = max(result.score for result in results.points)
-
-    #     search_results = [
-    #         SearchResult(
-    #             score=result.score / max_score,
-    #             text=result.payload["text"],
-    #             metadata=result.payload["metadata"],
-    #         )
-    #         for result in results.points
-    #     ]
-
-    #     return SearchResponse(results=search_results)
-
-    def search(self, query: str, limit: int = 3):
+    def search(
+        self, query: str, limit: int = 3, filter: Optional[Dict[str, Any]] = None
+    ):
         query_dense, query_sparse, query_colbert = self.embedding_service.embed_query(
             query
         )
+
+        query_filter = self._build_qdrant_filter(filter)
 
         results = self.qdrant.query_points(
             collection_name=self.collection_name,
@@ -83,6 +47,7 @@ class SearchService:
             query=query_colbert,
             using="colbert",
             limit=limit,
+            query_filter=query_filter,
         )
 
         max_score = max(result.score for result in results.points)
